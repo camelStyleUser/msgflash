@@ -1,0 +1,572 @@
+set LICENSE "This work is marked CC0 1.0. To view a copy of this mark, visit https://creativecommons.org/publicdomain/zero/1.0/"
+#0-xxx message blocks
+#bank1 contains our data
+#220=2^2*5*11
+#15=3*5
+#plan is
+#16 chars - 30 bytes???
+#a block of 4 messages perhaps??
+#208 of the chars can just be used as is
+#so
+#msg1:
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP 
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP QRSTUVWXgh ij
+#msg2:
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP 
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP YZabcdefkl mn
+#msg3:
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP 
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP QRSTUVWXop qr
+#msg4:
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP 
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP ABCDEFGHIJ KLMNOP
+#ABCDEFGHIJ KLMNOP YZabcdefst uv
+#A-P are the simple 16 char blocks
+#byte block layout
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO 
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO 
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO ABCDEFGHIJ KLMNO
+#ABCDEFGHIJ KLMNO
+#QRSTUVWXYZ abcde QRSTUVWXYZ abcde
+#ghijklmnop qrstu
+set MSGCNT 4
+op mod chk MSGCNT 4
+select errmsg notEqual chk 0 "MSGCNT%4!=0" null
+jump fail notEqual chk 0
+read fst message1 0
+write fst bank1 509
+write MSGCNT bank1 508
+await:
+read block bank1 510
+read cmd bank1 511
+op add blockcallback @counter 3
+jump rblock equal cmd 1
+jump wblock equal cmd 2
+jump await always
+write 0 bank1 511
+jump await always
+rblock:
+set idx 0
+rstblkdat:
+write 0 bank1 idx
+op add idx idx 1
+jump rstblkdat lessThan idx 275
+op mul lnk block 4
+op add lmt lnk 4
+set idx 0
+set shft 0
+rblockrmsg:
+getlink mlnk lnk
+set cchr 0
+rblockrchr:
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+op mod chk cchr 16
+jump rblockrchrnru notEqual chk 15
+op sub idx idx 5
+set shft 15
+set itr 0
+rblockchrrul:
+op and cbit dat15 1
+op shl cbit cbit shft
+read ctmv bank1 idx
+op or ctmv ctmv cbit
+write ctmv bank1 idx
+op shr dat15 dat15 1
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+op add itr itr 1
+jump rblockchrrul lessThan itr 15
+set shft 0
+jump rblockrchrrus always
+rblockrchrnru:
+op shl tmpv dat15 shft
+read ctmv bank1 idx
+op or ctmv ctmv tmpv
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+rblockrchrrus:
+op add cchr cchr 1
+jump rblockrchr lessThan cchr 208
+op add lnk lnk 1
+jump rblockrmsg lessThan lnk lmt
+#do the second pass to get our additional block data
+op sub lnk lnk 4
+getlink mlnk lnk
+set idx 260
+set cchr 208
+set shft 0
+set itr 0
+rblockrmsg1b:
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+op shl dat15 dat15 shft
+read ctmv bank1 idx
+op or ctmv ctmv dat15
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add cchr cchr 1
+op add itr itr 1
+jump rblockrmsg1b lessThan itr 8
+op add lnk lnk 1
+getlink mlnk lnk
+set cchr 208
+set itr 0
+rblockrmsg2b:
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+op shl dat15 dat15 shft
+read ctmv bank1 idx
+op or ctmv ctmv dat15
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add cchr cchr 1
+op add itr itr 1
+jump rblockrmsg2b lessThan itr 7
+set cchr 215
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+set idx 260
+set shft 15
+set itr 0
+rblockrmsg2ba:
+op and cbit dat15 1
+op shr dat15 dat15 1
+op shl cbit cbit shft
+read ctmv bank1 idx
+op or ctmv ctmv cbit
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+op add itr itr 1
+jump rblockrmsg2ba lessThan itr 15
+op add lnk lnk 1
+getlink mlnk lnk
+set idx 265
+set cchr 208
+set shft 0
+set itr 0
+rblockrmsg3b:
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+op shl dat15 dat15 shft
+read ctmv bank1 idx
+op or ctmv ctmv dat15
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add cchr cchr 1
+op add itr itr 1
+jump rblockrmsg3b lessThan itr 8
+op add lnk lnk 1
+getlink mlnk lnk
+set cchr 208
+set itr 0
+rblockrmsg4b:
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+op shl dat15 dat15 shft
+read ctmv bank1 idx
+op or ctmv ctmv dat15
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add cchr cchr 1
+op add itr itr 1
+jump rblockrmsg4b lessThan itr 7
+set cchr 215
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+set idx 265
+set shft 15
+set itr 0
+rblockrmsg4ba:
+op and cbit dat15 1
+op shr dat15 dat15 1
+op shl cbit cbit shft
+read ctmv bank1 idx
+op or ctmv ctmv cbit
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+op add itr itr 1
+jump rblockrmsg4ba lessThan itr 15
+#perform the third pass to finally get the last 30 bytes
+op sub lnk lnk 3
+set idx 270
+set shft 0
+set itr 0
+rblkramsg:
+getlink mlnk lnk
+set cchr 216
+rblkrachr:
+read codepoint mlnk cchr
+select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+op sub dat15 codepoint tmps
+jump rblkramsge equal itr 15
+op shl dat15 dat15 shft
+read ctmv bank1 idx
+op or ctmv ctmv dat15
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add cchr cchr 1
+op add itr itr 1
+jump rblkrachr lessThan cchr 220
+op add lnk lnk 1
+jump rblkramsg always
+rblkramsge:
+set idx 270
+set shft 15
+set itr 0
+rblockrmsgppr:
+op and cbit dat15 1
+op shr dat15 dat15 1
+op shl cbit cbit shft
+read ctmv bank1 idx
+op or ctmv ctmv cbit
+write ctmv bank1 idx
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+op add itr itr 1
+jump rblockrmsgppr lessThan itr 15
+set @counter blockcallback
+wblock:
+op mul lnk block 4
+op add lmt lnk 4
+printflush null
+set idx 0
+set shft 0
+wblockwrites:
+set cchar 0
+wblockwritechars:
+op mod tmpchk cchar 16
+jump wblockwritecharsnm notEqual tmpchk 15
+op sub idx idx 5
+set dat15 0
+set vshft 0
+set shft 15
+wblockwritecharsgul:
+read mval bank1 idx
+op shr mval mval shft
+op and mval mval 1
+op shl mval mval vshft
+op or dat15 dat15 mval
+op add vshft vshft 1
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+jump wblockwritecharsgul lessThan vshft 15
+set shft 0
+jump wblockwritecharsskp always
+wblockwritecharsnm:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+wblockwritecharsskp:
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add cchar cchar 1
+jump wblockwritechars lessThan cchar 208
+set oidx idx
+op and sblidx lnk 3
+op add @counter @counter sblidx
+jump wblockmsg1 always
+jump wblockmsg2 always
+jump wblockmsg3 always
+jump wblockmsg4 always
+#msg1
+wblockmsg1:
+set idx 260
+set shft 0
+set itr 0
+wmsg1gsd:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg1gsd lessThan itr 8
+set idx 270
+set shft 0
+set itr 0
+wmsg1gsd2:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg1gsd2 lessThan itr 4
+jump wsbloffd always
+#msg2
+wblockmsg2:
+set idx 262
+set shft 32
+set itr 0
+wmsg2gsd:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg2gsd lessThan itr 7
+set idx 260
+set shft 15
+set dat15 0
+set vshft 0
+wmsg2mu:
+read mval bank1 idx
+op shr mval mval shft
+op and mval mval 1
+op shl mval mval vshft
+op or dat15 dat15 mval
+op add vshft vshft 1
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+jump wmsg2mu lessThan vshft 15
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+set idx 271
+set shft 16
+set itr 0
+wmsg2gsd2:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg2gsd2 lessThan itr 4
+jump wsbloffd always
+#msg3
+wblockmsg3:
+set idx 265
+set shft 0
+set itr 0
+wmsg3gsd:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg3gsd lessThan itr 8
+set idx 272
+set shft 32
+set itr 0
+wmsg3gsd2:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg3gsd2 lessThan itr 4
+jump wsbloffd always
+#msg4
+wblockmsg4:
+set idx 267
+set shft 32
+set itr 0
+wmsg4gsd:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg4gsd lessThan itr 7
+set idx 265
+set shft 15
+set dat15 0
+set vshft 0
+wmsg4mu:
+read mval bank1 idx
+op shr mval mval shft
+op and mval mval 1
+op shl mval mval vshft
+op or dat15 dat15 mval
+op add vshft vshft 1
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+jump wmsg4mu lessThan vshft 15
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+set idx 274
+set shft 0
+set itr 0
+wmsg4gsd2:
+read dat15 bank1 idx
+op shr dat15 dat15 shft
+op and dat15 dat15 0x7fff
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+op add shft shft 16
+select tmpa equal shft 48 1 0
+op add idx idx tmpa
+select shft equal shft 48 0 shft
+op add itr itr 1
+jump wmsg4gsd2 lessThan itr 3
+set idx 270
+set shft 15
+set dat15 0
+set vshft 0
+wmsg4muu:
+read mval bank1 idx
+op shr mval mval shft
+op and mval mval 1
+op shl mval mval vshft
+op or dat15 dat15 mval
+op add vshft vshft 1
+op add shft shft 16
+select tmpa equal shft 63 1 0
+op add idx idx tmpa
+select shft equal shft 63 15 shft
+jump wmsg4muu lessThan vshft 15
+select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+op add codepoint dat15 tmpa
+printchar codepoint
+wsbloffd:
+set idx oidx
+set shft 0
+getlink mlnk lnk
+printflush mlnk
+op add lnk lnk 1
+jump wblockwrites lessThan lnk lmt
+set @counter blockcallback
+#3220-A480 are group 1
+#B000-BDA0 are group 2
+#dec15char:#the input must be a real ucs-2 char
+#select tmps greaterThanEq codepoint 0xb000 0x3da0 0x3220
+#op sub dat15 codepoint tmps
+#set @counter char15callback
+#enc15char:
+#select tmpa greaterThanEq dat15 0x7260 0x3da0 0x3220
+#op add codepoint dat15 tmpa
+#set @counter char15callback
+fail:
+jump fail always

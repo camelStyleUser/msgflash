@@ -1,0 +1,84 @@
+.\" msgflash300.7 - the *roff document processor source for the msgflash300 manual
+.\"
+.\" This file is part of msgflash300.
+.\" Created by 6f6626.
+.\" This work is marked CC0 1.0. To view a copy of this mark, visit https://creativecommons.org/publicdomain/zero/1.0/
+.TH msgflash300 7 "2026-03-26" "6f6626"
+.SH NAME
+\fImsgflash300\fP \- flash-like data storage using messages
+.SH NOTATION
+Ranges are end-exclusive unless noted otherwise!
+.SH WARNING
+DO NOT MODIFY THE MESSAGES MANUALLY, THE DATA WILL BE BROKEN!!!
+.SH LINKS
+There is a certain amount of messages that must be connected.
+.PP
+That number will from now on be referred to as MSGCNT.
+.PP
+MSGCNT%4=0 MUST always hold true.
+.PP
+Link indexes are 0\-based.
+.PP
+Links 0 through MSGCNT\-1(incl.) MUST be messages(first message MUST be called message1).
+.PP
+Link MSGCNT MUST be the bank used for interaction(and MUST be called bank1).
+.SH API
+\fImsgflash300\fP has a VERY simple API.
+.PP
+bank[0\-375]=BLKDATA; This is the actual data of the block.
+.PP
+The data uses 48-bit packing for each double of it used. The total byte capacity of each block is 2250.
+.PP
+bank1[508]=MSGCNT;
+MSGCNT is also a configuration inside the processor, which will be written here.
+.PP
+bank1[509]=fst;
+fst is the first character of message1.
+.PP
+If fst is NOT in the range of 0x3220\-0xA480(end exclusive) or 0xB000\-0xBDA0(end exclusive) then it is advised to fully format the flash storage to MSGCNT//4 blocks of capacity.
+.PP
+bank1[510]=block; This is the currently selected block that will be used for the write/read operation.
+.PP
+bank1[511]=cmd; This is the actual command channel.
+.PP
+.B 0
+0 is the default idle value of cmd.
+After executing a read/write, the cmd value will be set to 0 by \fImsgflash300\fP.
+.TP
+.B 1
+\fImsgflash300\fP will execute a READ operation, reading the selected block from messages into the bank.
+.TP
+.B 2
+\fImsgflash300\fP will execute a WRITE operation, writing the selected block from the bank into the messages.
+.SH CHAR15 DESCRIPTION
+CHAR15 is an internal encoding used by \fImsgflash300\fP inside message blocks.
+Values 0x0\-0x7260 are encoded as U+3220\-U+A480.
+Values 0x7260\-0x8000 are encoded as U+B000\-U+BDA0.
+.SH SUBBLOCK
+A subblock is 5 doubles(using 48\-bit packing)/30 bytes/15 16\-bit words.
+It is encoded as 16 CHAR15 chars.
+The first 15 chars simply encode the low 15 bits of each word.
+The last char encodes the high bit of each word, packed together.
+.SH BLOCK
+A block consists of 75 subblocks.
+The 75 subblocks are split between 4 messages.
+.PP
+In this section, the messsages of a block will be called message1-message4(incl.).
+.PP
+For each message in a block, the first 288 chars contain 18 subblocks.
+So, for example, in their first 288 chars, message1 will contain subblocks 0\-18, message2 will contain subblocks 18\-36, message3 will contain subblocks 36\-54, message4 will contain subblocks 54\-72.
+.PP
+Subblocks 72\-75 are spread between many messages.
+message1 contains the first half of subblock 72 in chars 288\-296.
+message2 contains the second half of subblock 72 in chars 288\-296.
+message3 contains the first half of subblock 73 in chars 288\-296.
+message4 contains the second half of subblock 73 in chars 288\-296.
+.PP
+Subblock 74 is spread across all messages.
+The data for subblock 74 is stored in chars 296\-300 in all messages.
+message1 contains chars 0\-4 of subblock 74.
+message2 contains chars 4\-8 of subblock 74.
+message3 contains chars 8\-12 of subblock 74.
+message4 contains chars 12\-16 of subblock 74.
+.SH CONTACTS
+To contact the author of \fImsgflash300\fP, you may send a DM to Discord username 6f6626(the author is present on the official Mindustry Discord server).
