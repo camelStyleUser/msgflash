@@ -1,6 +1,3 @@
 msgflash is a simple data storage implementation for Mindustry using message blocks.
-msgflash300 is left here as an archive
-it will no longer work due to the text limit being reduced to 250
-please use msgflash instead
-i might possibly in the future make msgflash250, not now however
+msgflash300 can be used now since anuke lifted the limit back up to 300 chars
 good luck!
