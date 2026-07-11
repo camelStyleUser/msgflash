@@ -80,8 +80,9 @@ read fst message1 0
 write fst bank1 509
 write MSGCNT bank1 508
 await:
-read block bank1 510
 read cmd bank1 511
+jump await equal cmd 0
+read block bank1 510
 op add blockcallback @counter 3
 jump rblock equal cmd 1
 jump wblock equal cmd 2
